@@ -61,10 +61,28 @@ namespace ConnectToExchangeServer
 
                         if (folder.DisplayName == "<Folder name>" && folder.UnreadCount > 0)
                             {
+                            SearchFilter sf = new SearchFilter.SearchFilterCollection(LogicalOperator.And, new SearchFilter.IsEqualTo(EmailMessageSchema.IsRead, false));
+                            ItemView view = new ItemView(1);
+
+                            // Fire the query for the unread items.
+                            // This method call results in a FindItem call to EWS.
+                            FindItemsResults<Item> findResults = service.FindItems(folder.Id, sf, view);
+                            var email = (EmailMessage)findResults.Items[0];
+
+                            EmailMessage message = EmailMessage.Bind(service, email.Id, new PropertySet(BasePropertySet.FirstClassProperties, ItemSchema.Attachments));
+                            mailFrom = message.From.Address;
+                            //Console.WriteLine("Name:" + email.From.Name);
+                            string subject = email.Subject;
+
+                            Console.WriteLine("\n\tEmail received from : " + mailFrom + " with subject \"" + subject + " at " + DateTime.Now);
+                            
                             folder.MarkAllItemsAsRead(true);
                             //Perform the action you want. Example : Go to the desired URL
                             var client = new WebClient();
+                            try{
                             client.OpenRead("http://google.com");
+                            }
+                            catch(Exception e){}
                             }
                         }
                     }
